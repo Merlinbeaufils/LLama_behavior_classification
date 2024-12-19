@@ -26,7 +26,7 @@ def test_get_activations(model, tokenizer, prompts, output_path):
 
         full_prompt = PROMPT_MAP(question)
 
-        answers, attentions, activations, guess = get_activations(model, tokenizer, full_prompt, file_name, output_dir=output_path, max_new_tokens=10)
+        answers, attentions, activations, guess = get_activations(model, tokenizer, full_prompt, file_name, output_dir=output_path, max_new_tokens=5)
 
         temp[file_name] = temp.get(file_name, {})
         temp[file_name]["Predicted Answer"] = guess
@@ -52,18 +52,19 @@ def test_batch_get_activations(model, tokenizer, prompts, output_path):
 
 
 if __name__ == "__main__":
-    example_dir = ".data\\mmlu_data_clean_json\\auxiliary_train\\arc_easy.json"
+    example_json = ".data\\mmlu_data_clean_json\\auxiliary_train\\arc_easy.json"
 
-    output_path = ".output/"
+    output_path = ".output\\auxiliary_train\\"
     dotenv.load_dotenv()
     token = os.getenv("HUGGINGFACE_TOKEN")
     model_name = "meta-llama/Meta-Llama-3-8B"
-    with open(example_dir, "r") as f:
+    with open(example_json, "r") as f:
         prompts = json.load(f)
 
-    model = LlamaForCausalLM.from_pretrained(model_name, device_map="cuda", torch_dtype=torch.bfloat16, token=token)
-    tokenizer = AutoTokenizer.from_pretrained(model_name, token=token)
+    model = LlamaForCausalLM.from_pretrained(model_name, device_map="cuda", torch_dtype=torch.bfloat16)
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
     model.eval()
 
-    #test_get_activations(model=model, tokenizer=tokenizer, prompts=prompts, output_path=output_path)
+    out_df = test_get_activations(model=model, tokenizer=tokenizer, prompts=prompts, output_path=output_path+"arc_easy")
+    out_df.to_json(output_path+"arc_easy\\arc_easy_answers.json", orient='index', indent=1)
     #test_batch_get_activations(model=model, tokenizer=tokenizer, prompts=prompts, output_path=output_path)
